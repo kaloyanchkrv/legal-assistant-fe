@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 const Dropzone = styled.div<{ isDragActive: boolean }>`
   border: ${({ isDragActive }) => (isDragActive ? "2px solid blue" : "2px dashed grey")};
-  padding: 150px; // Increased padding to make the box even larger
+  padding: 100px; // Increased padding to make the box even larger
   margin-bottom: 20px;
   border-radius: 5px;
   text-align: center;

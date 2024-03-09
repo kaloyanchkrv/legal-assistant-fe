@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, Tabs } from "@mantine/core";
 import styled from "styled-components";
 import FileUpload from "./FileUpload";
 
@@ -67,8 +67,13 @@ const Content = styled.main`
 const Section = styled.section`
   width: 100%;
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 10rem auto 2rem; // Increased the top margin to 4rem from 2rem
   text-align: center;
+`;
+
+const SectionHeader = styled.div`
+  text-align: center;
+  margin-bottom: 10rem; // Significantly increased the bottom margin
 `;
 
 // const Card = styled.div<{ isSelected: boolean }>`
@@ -88,6 +93,49 @@ const Footer = styled.footer`
   text-align: center;
   padding: 1rem 0;
   width: 100%;
+`;
+
+const StyledTabs = styled(Tabs)`
+  font-size: 1.25rem; // Make tabs text larger
+  button {
+    padding: 1rem 2rem; // Increase padding inside tabs
+    border: 1px solid transparent; // Add border to tabs
+    &:not(:last-of-type) {
+      margin-right: 1rem; // Add space between tabs
+    }
+    &:hover {
+      border-color: #000057; // Border color on hover
+      background-color: #f0f0f0; // Optional: change background on hover
+    }
+  }
+`;
+
+const StyledTab = styled(Tabs.Tab)`
+  font-size: 1.25rem; // Make tabs text larger
+  padding: 1rem 2rem; // Increase padding inside tabs
+  border: 1px solid black; // Add border to tabs
+  margin-right: 1rem; // Add space between tabs
+  cursor: pointer; // Cursor pointer for better UX
+
+  // Default non-active state
+  background-color: white; // White background for non-active tab
+  color: black; // Black text for non-active tab
+
+  &:hover:not(.mantine-Tabs-tabActive) {
+    background-color: #f7f7f7; // Very light grey background on hover for non-active tabs
+    // No need to change text color on hover if it's already black
+  }
+
+  &.mantine-Tabs-tabActive {
+    background-color: #4348a0; // A slightly brighter blue than #000057
+    color: white; // White text for active tab
+    border-color: #4348a0; // Matching border color for active tab
+  }
+`;
+
+const H1_5 = styled.h2`
+  font-size: calc(1.5rem + 1vw); /* This is just an example, adjust the calculation as needed */
+  /* Add more styles if necessary */
 `;
 
 const App: React.FC = () => {
@@ -124,18 +172,20 @@ const App: React.FC = () => {
           </NavigationBar>
         </StyledHeader>
         <Content>
+          <SectionHeader>
+            <StyledTabs defaultValue="summarize" variant="outline">
+              <Tabs.List>
+                <StyledTab value="summarize">Summarize</StyledTab>
+                <StyledTab value="analyze">Analyze</StyledTab>
+                <StyledTab value="enforce">Enforce</StyledTab>
+              </Tabs.List>
+            </StyledTabs>
+          </SectionHeader>
           <Section>
-            <h1>Now let's see that document!</h1>
+            <H1_5>Now let's see that document!</H1_5>
             <FileUpload onFileSelect={handleFileSelect} />
             <StyledButton disabled={!file}>Analyze document</StyledButton>
           </Section>
-          {/* <Section>
-            {cards.map((card) => (
-              <Card key={card.id} isSelected={selectedCard === card.id} onClick={() => selectCard(card.id)}>
-                <p>{card.text}</p>
-              </Card>
-            ))}
-          </Section> */}
         </Content>
         <Footer>© 2024 Your Company Name. All rights reserved.</Footer>
       </MainLayout>
