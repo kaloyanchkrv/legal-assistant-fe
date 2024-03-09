@@ -12,7 +12,7 @@ const MainLayout = styled.div`
 `;
 
 const StyledHeader = styled.header`
-  background-color: #000057;
+  background-color: #000000;
   padding: 1rem 0;
   width: 100%;
 `;
@@ -34,7 +34,7 @@ const NavLinks = styled.div`
 
 const StyledButton = styled.button<{ disabled: boolean }>`
   border: none;
-  background-color: ${({ disabled }) => (disabled ? "#666" : "#000057")}; // Darken when disabled
+  background-color: ${({ disabled }) => (disabled ? "#666" : "#FF914D")}; // Darken when disabled
   color: ${({ disabled }) => (disabled ? "#aaa" : "white")}; // Lighten text color when disabled
   padding: 1rem 2rem; // Increased padding for a larger button
   font-size: 1.25rem; // Increase font size if needed
@@ -45,7 +45,7 @@ const StyledButton = styled.button<{ disabled: boolean }>`
 
   &:hover {
     background-color: ${({ disabled }) =>
-      disabled ? "#666" : "#0000af"}; // Slightly change color on hover if not disabled
+      disabled ? "#666" : "#000000"}; // Slightly change color on hover if not disabled
   }
 `;
 
@@ -88,7 +88,7 @@ const SectionHeader = styled.div`
 // `;
 
 const Footer = styled.footer`
-  background-color: #000057;
+  background-color: #000000;
   color: white;
   text-align: center;
   padding: 1rem 0;
