@@ -1,10 +1,11 @@
-import React, {useState} from "react";
-import {MantineProvider, rem, Tabs} from "@mantine/core";
+import React, {createContext, useContext, useState} from "react";
+import {Box, Card, Group, Loader, LoadingOverlay, MantineProvider, rem, ScrollArea, Stack, Tabs} from "@mantine/core";
 import styled from "styled-components";
 import FileUpload from "./components/FileUpload.tsx";
-import {IconX} from '@tabler/icons-react';
-import {analyze, defend} from "../network/apiDataSource.ts";
-
+import {analyze, summarize,} from "../network/apiDataSource.ts";
+import {useDisclosure} from "@mantine/hooks";
+import LoadingContext from "./screen/LoadingContext.ts";
+import LoadingProvider from "./components/LoadingProvider.tsx";
 // Define your styled components here
 const MainLayout = styled.div`
     display: flex;
@@ -78,17 +79,6 @@ const SectionHeader = styled.div`
     margin-bottom: 10rem; // Significantly increased the bottom margin
 `;
 
-// const Card = styled.div<{ isSelected: boolean }>`
-//   background-color: #f7f7f7; // Light background for cards
-//   border-radius: 5px;
-//   box-shadow: ${({ isSelected }) =>
-//     isSelected ? "0 0 15px rgba(0, 0, 255, 0.5)" : "0 2px 4px rgba(0, 0, 0, 0.1)"}; // Highlight when selected
-//   padding: 1rem;
-//   margin-bottom: 2rem; // Space between cards
-//   width: 100%; // Full width of the container
-//   cursor: pointer;
-// `;
-
 const Footer = styled.footer`
     background-color: #000057;
     color: white;
@@ -138,6 +128,44 @@ const StyledTab = styled(Tabs.Tab)`
     }
 `;
 
+const StyledCardDefault = styled(Card)`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    box-shadow: #1a1a1a;
+    width: min-content;
+    margin: 0 auto;
+`;
+
+const StyledGroup = styled(Group)`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    box-shadow: #1a1a1a;
+    width: min-content;
+    margin: 0 auto;
+    max-height: 300px;
+`
+
+const StyledCard = styled.div`
+    background-color: #f7f7f7;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    cursor: pointer;
+    border: ${({isSelected}) => isSelected ? '2px solid #000057' : 'none'};
+
+    &:hover {
+        background-color: #e7e7e7;
+    }
+`;
+
 const H1_5 = styled.h2`
     font-size: calc(1.5rem + 1vw); /* This is just an example, adjust the calculation as needed */
     /* Add more styles if necessary */
@@ -145,24 +173,185 @@ const H1_5 = styled.h2`
 
 const H1_7 = styled.body`
     font-size: calc(0.2rem + 1vw); /* This is just an example, adjust the calculation as needed */
+    max-height: min-content;
     /* Add more styles if necessary */
 `;
 
+
+
+
 const App: React.FC = () => {
-    // const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
-    // const selectCard = (cardId: string) => {
-    //   setSelectedCard(cardId);
-    // };
-
-    // interface CardData {
-    //   id: string;
-    //   text: string;
-    // }
-
-    //const cards: CardData[] = [{ id: "summarize", text: "Summarize a document for me" }];
     // const xIcon = <IconX style={{width: rem(20), height: rem(20)}}/>;
-    const [shouldShowError, setShouldShowError] = useState<boolean>(false)
+
+    const [analyze, setAnalyze] = useState(false)
+    const [summarize, setSummarize] = useState(false)
+    const [suggest, setSuggest] = useState(false)
+
+    const [selectedCard, setSelectedCard] = useState(null);
+    const cards = [
+        {id: 'summarize', text: 'Summarize a document for me'},
+        {id: 'analyze', text: 'Highlight problematic clauses, loopholes and risks for me'},
+        {id: 'suggest', text: 'Suggest improvements to me'},
+    ];
+    const handleCardClick = (cardId: string) => {
+        if (cardId == "analyze") {
+            setAnalyze(true)
+        } else {
+            setAnalyze(false)
+        }
+        if (cardId == "summarize") {
+            setSummarize(true)
+        } else {
+            setSummarize(false)
+        }
+        if (cardId == "suggest") {
+            setSuggest(true)
+        } else {
+            setSuggest(false)
+        }
+        setSelectedCard(cardId);
+    };
+
+
+    return (
+        <MantineProvider>
+            <MainLayout>
+                <StyledHeader>
+                    <NavigationBar>
+                        <NavLinks>
+                            <StyledLink href="#">Home</StyledLink>
+                            <StyledLink href="#">Services</StyledLink>
+                            <StyledLink href="#">About Us</StyledLink>
+                            <StyledLink href="#">Contact</StyledLink>
+                        </NavLinks>
+                    </NavigationBar>
+                </StyledHeader>
+                <ScrollArea>
+                    <LoadingProvider>
+                        <Content>
+                            <StyledGroup justify="space-between" mt="md" mb="xs" preventGrowOverflow={false}>
+                                <H1_5>Should you sign that document?</H1_5>
+                                <H1_7>documents or confidentiality agreements are a fact of life if you're in
+                                    business.</H1_7>
+                                <H1_7>You've probably read tons of them, and you know more or less what you would
+                                    accept.</H1_7>
+                                <H1_7>Of course you can hire a lawyer to review that document. And you know they'll find
+                                    faults and recommend changes to better protect you.</H1_7>
+                                <H1_7> But it’ll cost you, in both time and money. And do you really need the perfect
+                                    document, or is it OK to flag the key risks and move on?</H1_7>
+                                <H1_7>That's where I come in. I’m an AI lawyerbot and I can review your document. Free of
+                                    charge.</H1_7>
+                            </StyledGroup>
+
+                            <Section>
+                                {cards.map((card) => (
+                                    <StyledCard
+                                        key={card.id}
+                                        isSelected={selectedCard === card.id}
+                                        onClick={() => handleCardClick(card.id)}
+                                    >
+                                        <p>{card.text}</p>
+                                    </StyledCard>
+                                ))}
+                            </Section>
+                            {}
+
+                        </Content>
+                    </LoadingProvider>
+
+                </ScrollArea>
+                {analyze ? <Analyze/> : null}
+                {summarize ? <Summarize/> : null}
+                {suggest ? <Suggest/> : null}
+                <Footer>© 2024 Your Company Name. All rights reserved.</Footer>
+            </MainLayout>
+        </MantineProvider>
+    );
+};
+
+const Summarize = () => {
+
+    const [visible, {toggle}] = useDisclosure(false);
+    const [content, setContent] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("")
+    const [resultText, setResultText] = useState<string>("")
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileSelect = (selectedFile: File | null) => {
+        setFile(selectedFile);
+    };
+
+    const handleSummarize = async () => {
+        toggle()
+        setContent("")
+        setInstructions("Summarize me the contract and give me the most important key points")
+        if (file != null) {
+            try {
+                const data = await summarize({content, instructions, file})
+                setResultText(data)
+                toggle()
+            } catch (error) {
+                toggle()
+            }
+        }
+    }
+
+    return (
+       <>
+           <Box pos="relative">
+               <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+               <Section>
+                   <H1_5>Now let's see that document!</H1_5>
+                   <FileUpload onFileSelect={handleFileSelect}/>
+                   <StyledButton onClick={handleSummarize} disabled={!file}>Summarize information</StyledButton>
+
+                   <H1_7>{resultText}</H1_7>
+               </Section>
+           </Box>
+       </>
+    )
+};
+
+const Suggest = () => {
+
+    const [visible, {toggle}] = useDisclosure(false);
+    const [content, setContent] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("")
+    const [resultText, setResultText] = useState<string>("")
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileSelect = (selectedFile: File | null) => {
+        setFile(selectedFile);
+    };
+
+    const handleSummarize = async () => {
+        toggle()
+        setContent("")
+        setInstructions("Summarize me the contract and give me the most important key points")
+        if (file != null) {
+            try {
+                const data = await summarize({content, instructions, file})
+                setResultText(data)
+                toggle()
+            } catch (error) {
+                toggle()
+            }
+        }
+    }
+
+    return (<Section>
+        <H1_5>Now let's see that document!</H1_5>
+        <FileUpload onFileSelect={handleFileSelect}/>
+        <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
+
+        <H1_7>{resultText}</H1_7>
+    </Section>)
+};
+
+const Analyze = () => {
+
+
     const [content, setContent] = useState<string>("")
     const [instructions, setInstructions] = useState<string>("")
     const [resultText, setResultText] = useState<string>("")
@@ -180,47 +369,22 @@ const App: React.FC = () => {
             try {
                 const data = await analyze({content, instructions, file})
                 setResultText(data)
+
             } catch (error) {
-                setShouldShowError(true)
+
             }
         }
     }
 
     return (
-        <MantineProvider>
-            <MainLayout>
-                <StyledHeader>
-                    <NavigationBar>
-                        <NavLinks>
-                            <StyledLink href="#">Home</StyledLink>
-                            <StyledLink href="#">Services</StyledLink>
-                            <StyledLink href="#">About Us</StyledLink>
-                            <StyledLink href="#">Contact</StyledLink>
-                        </NavLinks>
-                    </NavigationBar>
-                </StyledHeader>
-                <Content>
-                    <SectionHeader>
-                        <StyledTabs defaultValue="summarize" variant="outline">
-                            <Tabs.List>
-                                <StyledTab value="summarize">Summarize</StyledTab>
-                                <StyledTab value="analyze">Analyze</StyledTab>
-                                <StyledTab value="enforce">Enforce</StyledTab>
-                            </Tabs.List>
-                        </StyledTabs>
-                    </SectionHeader>
-                    <Section>
-                        <H1_5>Now let's see that document!</H1_5>
-                        <FileUpload onFileSelect={handleFileSelect}/>
-                        <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
+        <Section>
+            <H1_5>Now let's see that document!</H1_5>
+            <FileUpload onFileSelect={handleFileSelect}/>
+            <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
 
-                        <H1_7>{resultText}</H1_7>
-                    </Section>
-                </Content>
-                <Footer>© 2024 Your Company Name. All rights reserved.</Footer>
-            </MainLayout>
-        </MantineProvider>
-    );
+            <H1_7>{resultText}</H1_7>
+        </Section>
+    )
 };
 
 export default App;
