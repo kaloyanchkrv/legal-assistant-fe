@@ -1,11 +1,26 @@
 import React, {createContext, useContext, useState} from "react";
-import {Box, Card, Group, Loader, LoadingOverlay, MantineProvider, rem, ScrollArea, Stack, Tabs} from "@mantine/core";
+import {
+    Box,
+    Button,
+    Card,
+    Group,
+    Loader,
+    LoadingOverlay,
+    MantineProvider,
+    rem,
+    ScrollArea,
+    Stack,
+    Tabs
+} from "@mantine/core";
 import styled from "styled-components";
 import FileUpload from "./components/FileUpload.tsx";
 import {analyze, summarize,} from "../network/apiDataSource.ts";
 import {useDisclosure} from "@mantine/hooks";
-import LoadingContext from "./screen/LoadingContext.ts";
 import LoadingProvider from "./components/LoadingProvider.tsx";
+import Markdown from "react-markdown";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 // Define your styled components here
 const MainLayout = styled.div`
     display: flex;
@@ -274,7 +289,7 @@ const Summarize = () => {
 
     const [visible, {toggle}] = useDisclosure(false);
     const [content, setContent] = useState<string>("")
-    const [instructions, setInstructions] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("Summarize me the contract and give me the most important key points. Return the response in academic style")
     const [resultText, setResultText] = useState<string>("")
     const [file, setFile] = useState<File | null>(null);
 
@@ -284,8 +299,6 @@ const Summarize = () => {
 
     const handleSummarize = async () => {
         toggle()
-        setContent("")
-        setInstructions("Summarize me the contract and give me the most important key points")
         if (file != null) {
             try {
                 const data = await summarize({content, instructions, file})
@@ -295,6 +308,16 @@ const Summarize = () => {
                 toggle()
             }
         }
+    }
+
+    const downloadTxtFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([resultText],
+            {type: 'text/plain;charset=utf-8'});
+        element.href = URL.createObjectURL(file);
+        element.download = "myFile.txt";
+        document.body.appendChild(element);
+        element.click();
     }
 
     return (
@@ -306,7 +329,8 @@ const Summarize = () => {
                    <FileUpload onFileSelect={handleFileSelect}/>
                    <StyledButton onClick={handleSummarize} disabled={!file}>Summarize information</StyledButton>
 
-                   <H1_7>{resultText}</H1_7>
+                   <Markdown>{resultText}</Markdown>
+                   <Button onClick={downloadTxtFile}>Download PDF</Button>
                </Section>
            </Box>
        </>
@@ -317,7 +341,7 @@ const Suggest = () => {
 
     const [visible, {toggle}] = useDisclosure(false);
     const [content, setContent] = useState<string>("")
-    const [instructions, setInstructions] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("Summarize me the contract and give me the most important key points. Return the response in academic style")
     const [resultText, setResultText] = useState<string>("")
     const [file, setFile] = useState<File | null>(null);
 
@@ -327,8 +351,6 @@ const Suggest = () => {
 
     const handleSummarize = async () => {
         toggle()
-        setContent("")
-        setInstructions("Summarize me the contract and give me the most important key points")
         if (file != null) {
             try {
                 const data = await summarize({content, instructions, file})
@@ -339,21 +361,31 @@ const Suggest = () => {
             }
         }
     }
+    const downloadTxtFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([resultText],
+            {type: 'text/plain;charset=utf-8'});
+        element.href = URL.createObjectURL(file);
+        element.download = "myFile.txt";
+        document.body.appendChild(element);
+        element.click();
+    }
+
 
     return (<Section>
         <H1_5>Now let's see that document!</H1_5>
         <FileUpload onFileSelect={handleFileSelect}/>
         <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
 
-        <H1_7>{resultText}</H1_7>
+        <Markdown>{resultText}</Markdown>
+        <Button onClick={downloadTxtFile}>Download PDF</Button>
     </Section>)
 };
 
 const Analyze = () => {
 
-
     const [content, setContent] = useState<string>("")
-    const [instructions, setInstructions] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("Analyse the document and give a suggestion for improvements. Return the response in academic style")
     const [resultText, setResultText] = useState<string>("")
 
     const [file, setFile] = useState<File | null>(null);
@@ -363,8 +395,6 @@ const Analyze = () => {
     };
 
     const handleAnalyze = async () => {
-        setContent("")
-        setInstructions("Analyse the document and give a suggestion for improvements")
         if (file != null) {
             try {
                 const data = await analyze({content, instructions, file})
@@ -376,13 +406,26 @@ const Analyze = () => {
         }
     }
 
+    const downloadTxtFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([resultText],
+            {type: 'text/plain;charset=utf-8'});
+        element.href = URL.createObjectURL(file);
+        element.download = "myFile.txt";
+        document.body.appendChild(element);
+        element.click();
+    }
+
+
     return (
         <Section>
             <H1_5>Now let's see that document!</H1_5>
             <FileUpload onFileSelect={handleFileSelect}/>
             <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
 
-            <H1_7>{resultText}</H1_7>
+            <Markdown>{resultText}</Markdown>
+            {/* Ensure to pass the same id to the target component */}
+            <Button onClick={downloadTxtFile}>Download PDF</Button>
         </Section>
     )
 };
