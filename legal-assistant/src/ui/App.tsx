@@ -329,7 +329,7 @@ const Summarize = () => {
                     <StyledButton onClick={handleSummarize} disabled={!file}>Summarize information</StyledButton>
 
                     <Markdown>{resultText}</Markdown>
-                    <Button onClick={downloadTxtFile}>Download PDF</Button>
+                    {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
                 </Section>}
             </Box>
         </>
@@ -373,14 +373,14 @@ const Suggest = () => {
 
     return (
         <Box>
-            {visible ? <Section>
+            {visible ? <Loader /> :<Section>
                 <H1_5>Now let's see that document!</H1_5>
                 <FileUpload onFileSelect={handleFileSelect}/>
                 <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
 
                 <Markdown>{resultText}</Markdown>
-                <Button onClick={downloadTxtFile}>Download PDF</Button>
-            </Section> : <Loader />}
+                {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
+            </Section>}
         </Box>
     )
 };
@@ -424,15 +424,15 @@ const Analyze = () => {
 
     return (
         <Box>
-            {visible ? <Section>
+            {visible ? <Loader /> : <Section>
                 <H1_5>Now let's see that document!</H1_5>
                 <FileUpload onFileSelect={handleFileSelect}/>
                 <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
 
                 <Markdown>{resultText}</Markdown>
                 {/* Ensure to pass the same id to the target component */}
-                <Button onClick={downloadTxtFile}>Download PDF</Button>
-            </Section> : <Loader/>}
+                {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
+            </Section>}
         </Box>
 
     )
