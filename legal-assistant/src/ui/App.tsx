@@ -18,8 +18,9 @@ import {analyze, summarize,} from "../network/apiDataSource.ts";
 import {useDisclosure} from "@mantine/hooks";
 import LoadingProvider from "./components/LoadingProvider.tsx";
 import Markdown from "react-markdown";
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import Emoji from "./components/Emojy.tsx";
+import emailjs from '@emailjs/browser';
+
 
 // Define your styled components here
 const MainLayout = styled.div`
@@ -188,7 +189,7 @@ const H1_5 = styled.h2`
 
 const H1_7 = styled.body`
     font-size: calc(0.2rem + 1vw); /* This is just an example, adjust the calculation as needed */
-    max-height: min-content;
+    max-height: 20px;
     /* Add more styles if necessary */
 `;
 
@@ -243,21 +244,7 @@ const App: React.FC = () => {
                 <ScrollArea>
                     <LoadingProvider>
                         <Content>
-                            <StyledGroup justify="space-between" mt="md" mb="xs" preventGrowOverflow={false}>
-                                <H1_5>Should you sign that document?</H1_5>
-                                <H1_7>documents or confidentiality agreements are a fact of life if you're in
-                                    business.</H1_7>
-                                <H1_7>You've probably read tons of them, and you know more or less what you would
-                                    accept.</H1_7>
-                                <H1_7>Of course you can hire a lawyer to review that document. And you know they'll find
-                                    faults and recommend changes to better protect you.</H1_7>
-                                <H1_7> But it’ll cost you, in both time and money. And do you really need the perfect
-                                    document, or is it OK to flag the key risks and move on?</H1_7>
-                                <H1_7>That's where I come in. I’m an AI lawyerbot and I can review your document. Free
-                                    of
-                                    charge.</H1_7>
-                            </StyledGroup>
-
+                            <H1_5><Emoji symbol="👋"/> Hey there, how can I help?</H1_5>
                             <Section>
                                 {cards.map((card) => (
                                     <StyledCard
@@ -269,8 +256,6 @@ const App: React.FC = () => {
                                     </StyledCard>
                                 ))}
                             </Section>
-                            {}
-
                         </Content>
                     </LoadingProvider>
 
@@ -292,6 +277,9 @@ const Summarize = () => {
     const [resultText, setResultText] = useState<string>("")
     const [file, setFile] = useState<File | null>(null);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [stateMessage, setStateMessage] = useState(null);
+
     const handleFileSelect = (selectedFile: File | null) => {
         setFile(selectedFile);
     };
@@ -318,6 +306,20 @@ const Summarize = () => {
         document.body.appendChild(element);
         element.click();
     }
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            const permissions = await navigator.permissions.query({name: "clipboard-write"})
+            if (permissions.state === "granted" || permissions.state === "prompt") {
+                await navigator.clipboard.writeText(text);
+                alert('Text copied to clipboard!');
+            } else {
+                alert('You need to enabled your browser permissions');
+            }
+        } catch (error) {
+            alert('Error copying to clipboard:');
+        }
+    };
 
     return (
         <>
@@ -330,58 +332,12 @@ const Summarize = () => {
 
                     <Markdown>{resultText}</Markdown>
                     {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
+                    {resultText == "" ? null : <Button onClick={async () => {
+                        await copyToClipboard(resultText)
+                    }}>Copy to clipboard</Button>}
                 </Section>}
             </Box>
         </>
-    )
-};
-
-const Suggest = () => {
-
-    const [visible, {toggle}] = useDisclosure(false);
-    const [content, setContent] = useState<string>("")
-    const [instructions, setInstructions] = useState<string>("Summarize me the contract and give me the most important key points. Return the response in academic style")
-    const [resultText, setResultText] = useState<string>("")
-    const [file, setFile] = useState<File | null>(null);
-
-    const handleFileSelect = (selectedFile: File | null) => {
-        setFile(selectedFile);
-    };
-
-    const handleSummarize = async () => {
-        toggle()
-        if (file != null) {
-            try {
-                const data = await summarize({content, instructions, file})
-                setResultText(data)
-                toggle()
-            } catch (error) {
-                toggle()
-            }
-        }
-    }
-    const downloadTxtFile = () => {
-        const element = document.createElement("a");
-        const file = new Blob([resultText],
-            {type: 'text/plain;charset=utf-8'});
-        element.href = URL.createObjectURL(file);
-        element.download = "myFile.txt";
-        document.body.appendChild(element);
-        element.click();
-    }
-
-
-    return (
-        <Box>
-            {visible ? <Loader /> :<Section>
-                <H1_5>Now let's see that document!</H1_5>
-                <FileUpload onFileSelect={handleFileSelect}/>
-                <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
-
-                <Markdown>{resultText}</Markdown>
-                {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
-            </Section>}
-        </Box>
     )
 };
 
@@ -389,7 +345,7 @@ const Analyze = () => {
 
     const [visible, {toggle}] = useDisclosure(false);
     const [content, setContent] = useState<string>("")
-    const [instructions, setInstructions] = useState<string>("Analyse the document and give a suggestion for improvements. Return the response in academic style")
+    const [instructions, setInstructions] = useState<string>("Analyse the document and highlight problematic clauses, loopholes and risk for me. Return the response in academic style")
     const [resultText, setResultText] = useState<string>("")
 
     const [file, setFile] = useState<File | null>(null);
@@ -421,20 +377,103 @@ const Analyze = () => {
         element.click();
     }
 
+    const copyToClipboard = async (text: string) => {
+        try {
+            const permissions = await navigator.permissions.query({name: "clipboard-write"})
+            if (permissions.state === "granted" || permissions.state === "prompt") {
+                await navigator.clipboard.writeText(text);
+                alert('Text copied to clipboard!');
+            } else {
+                alert('You need to enabled your browser permissions');
+            }
+        } catch (error) {
+            alert('Error copying to clipboard:');
+        }
+    };
+
+    return (
+        <Section>
+            <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{radius: "sm", blur: 2}}/>
+            <H1_5>Now let's see that document!</H1_5>
+            <FileUpload onFileSelect={handleFileSelect}/>
+            <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
+
+            {/*{resultText == "" ? null : <H1_7>Here is what I got for you.</H1_7>}*/}
+            <Markdown>{resultText}</Markdown>
+            {/* Ensure to pass the same id to the target component */}
+            {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
+
+            {resultText == "" ? null : <Button onClick={async () => {
+                await copyToClipboard(resultText)
+            }}>Copy to clipboard</Button>}
+        </Section>
+    )
+};
+
+const Suggest = () => {
+
+    const [visible, {toggle}] = useDisclosure(false);
+    const [content, setContent] = useState<string>("")
+    const [instructions, setInstructions] = useState<string>("Analyse the document and give a suggestion for improvements. Return the response in academic style.")
+    const [resultText, setResultText] = useState<string>("")
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileSelect = (selectedFile: File | null) => {
+        setFile(selectedFile);
+    };
+
+    const handleSummarize = async () => {
+        toggle()
+        if (file != null) {
+            try {
+                const data = await analyze({content, instructions, file})
+                setResultText(data)
+                toggle()
+            } catch (error) {
+                toggle()
+            }
+        }
+    }
+    const downloadTxtFile = () => {
+        const element = document.createElement("a");
+        const file = new Blob([resultText],
+            {type: 'text/plain;charset=utf-8'});
+        element.href = URL.createObjectURL(file);
+        element.download = "myFile.txt";
+        document.body.appendChild(element);
+        element.click();
+    }
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            const permissions = await navigator.permissions.query({name: "clipboard-write"})
+            if (permissions.state === "granted" || permissions.state === "prompt") {
+                await navigator.clipboard.writeText(text);
+                alert('Text copied to clipboard!');
+            } else {
+                alert('You need to enabled your browser permissions');
+            }
+        } catch (error) {
+            alert('Error copying to clipboard:');
+        }
+    };
+
 
     return (
         <Box>
-            {visible ? <Loader /> : <Section>
-                <H1_5>Now let's see that document!</H1_5>
-                <FileUpload onFileSelect={handleFileSelect}/>
-                <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
+            {visible ? <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{radius: "sm", blur: 2}}/> :
+                <Section>
+                    <H1_5>Now let's see that document!</H1_5>
+                    <FileUpload onFileSelect={handleFileSelect}/>
+                    <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
 
-                <Markdown>{resultText}</Markdown>
-                {/* Ensure to pass the same id to the target component */}
-                {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
-            </Section>}
+                    <Markdown>{resultText}</Markdown>
+                    {resultText == "" ? null : <Button onClick={downloadTxtFile}>Download PDF</Button>}
+                    {resultText == "" ? null : <Button onClick={async () => {
+                        await copyToClipboard(resultText)
+                    }}>Copy to clipboard</Button>}
+                </Section>}
         </Box>
-
     )
 };
 
