@@ -193,8 +193,6 @@ const H1_7 = styled.body`
 `;
 
 
-
-
 const App: React.FC = () => {
 
     // const xIcon = <IconX style={{width: rem(20), height: rem(20)}}/>;
@@ -255,7 +253,8 @@ const App: React.FC = () => {
                                     faults and recommend changes to better protect you.</H1_7>
                                 <H1_7> But it’ll cost you, in both time and money. And do you really need the perfect
                                     document, or is it OK to flag the key risks and move on?</H1_7>
-                                <H1_7>That's where I come in. I’m an AI lawyerbot and I can review your document. Free of
+                                <H1_7>That's where I come in. I’m an AI lawyerbot and I can review your document. Free
+                                    of
                                     charge.</H1_7>
                             </StyledGroup>
 
@@ -321,19 +320,19 @@ const Summarize = () => {
     }
 
     return (
-       <>
-           <Box pos="relative">
-               <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-               <Section>
-                   <H1_5>Now let's see that document!</H1_5>
-                   <FileUpload onFileSelect={handleFileSelect}/>
-                   <StyledButton onClick={handleSummarize} disabled={!file}>Summarize information</StyledButton>
+        <>
+            <Box pos="relative">
+                <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{radius: "sm", blur: 2}}/>
+                {visible ? null : <Section>
+                    <H1_5>Now let's see that document!</H1_5>
+                    <FileUpload onFileSelect={handleFileSelect}/>
+                    <StyledButton onClick={handleSummarize} disabled={!file}>Summarize information</StyledButton>
 
-                   <Markdown>{resultText}</Markdown>
-                   <Button onClick={downloadTxtFile}>Download PDF</Button>
-               </Section>
-           </Box>
-       </>
+                    <Markdown>{resultText}</Markdown>
+                    <Button onClick={downloadTxtFile}>Download PDF</Button>
+                </Section>}
+            </Box>
+        </>
     )
 };
 
@@ -372,18 +371,23 @@ const Suggest = () => {
     }
 
 
-    return (<Section>
-        <H1_5>Now let's see that document!</H1_5>
-        <FileUpload onFileSelect={handleFileSelect}/>
-        <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
+    return (
+        <Box>
+            {visible ? <Section>
+                <H1_5>Now let's see that document!</H1_5>
+                <FileUpload onFileSelect={handleFileSelect}/>
+                <StyledButton onClick={handleSummarize} disabled={!file}>Analyze document</StyledButton>
 
-        <Markdown>{resultText}</Markdown>
-        <Button onClick={downloadTxtFile}>Download PDF</Button>
-    </Section>)
+                <Markdown>{resultText}</Markdown>
+                <Button onClick={downloadTxtFile}>Download PDF</Button>
+            </Section> : <Loader />}
+        </Box>
+    )
 };
 
 const Analyze = () => {
 
+    const [visible, {toggle}] = useDisclosure(false);
     const [content, setContent] = useState<string>("")
     const [instructions, setInstructions] = useState<string>("Analyse the document and give a suggestion for improvements. Return the response in academic style")
     const [resultText, setResultText] = useState<string>("")
@@ -395,13 +399,14 @@ const Analyze = () => {
     };
 
     const handleAnalyze = async () => {
+        toggle()
         if (file != null) {
             try {
                 const data = await analyze({content, instructions, file})
                 setResultText(data)
-
+                toggle()
             } catch (error) {
-
+                toggle()
             }
         }
     }
@@ -418,15 +423,18 @@ const Analyze = () => {
 
 
     return (
-        <Section>
-            <H1_5>Now let's see that document!</H1_5>
-            <FileUpload onFileSelect={handleFileSelect}/>
-            <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
+        <Box>
+            {visible ? <Section>
+                <H1_5>Now let's see that document!</H1_5>
+                <FileUpload onFileSelect={handleFileSelect}/>
+                <StyledButton onClick={handleAnalyze} disabled={!file}>Analyze document</StyledButton>
 
-            <Markdown>{resultText}</Markdown>
-            {/* Ensure to pass the same id to the target component */}
-            <Button onClick={downloadTxtFile}>Download PDF</Button>
-        </Section>
+                <Markdown>{resultText}</Markdown>
+                {/* Ensure to pass the same id to the target component */}
+                <Button onClick={downloadTxtFile}>Download PDF</Button>
+            </Section> : <Loader/>}
+        </Box>
+
     )
 };
 
